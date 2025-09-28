@@ -1,0 +1,23 @@
+<!doctype html>
+<html>
+    <head>
+        <title>Phishing detector</title>
+    </head>
+    <body>
+        <form method="post" action="/emailDetector">
+            <label for="email">Sender's Email</label><br>
+            <input type="text" id="email" name="email" placeholder="example.com"><br>
+            <label for="subject">Email Subject</label><br>
+            <textarea id="subject" name="subject" placeholder="Enter email subject"></textarea><br><br>
+            <label for="body">Body</label><br>
+            <textarea id="body" name="body" rows="4" cols="50" placeholder="Enter email body"></textarea><br><br>
+            <button type="submit">Submit</button>   
+        </form>
+
+        <div id="result">
+                <p id="susResult" class="hidden">The sender is suspicious</p>
+                <p id="goodResult" class="hidden">The sender is legitimate.</p>
+                <p id="badResult" class="hidden">The sender is phishing.</p>
+        </div>
+    </body>
+</html>
