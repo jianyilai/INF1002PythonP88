@@ -19,8 +19,7 @@ def _flatten_keywords():
     for _, phrases in PHISHING_KEYWORDS_DATASET.items():
         flat.extend(phrases)
     return flat
-    # Minimal fallback list (edit/extend as needed):
-    # return ["urgent", "verify account", "password", "click here"]
+
 
 
 def _compile_patterns(phrases):
