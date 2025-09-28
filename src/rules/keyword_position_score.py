@@ -5,7 +5,7 @@
 # - Returns (score, details)
 
 from typing import Iterable, Tuple, Dict, Any
-from keywords import PHISHING_KEYWORDS_DATASET
+#from .keywords import PHISHING_KEYWORDS_DATASET
 import re
  
 # uses keywords.py, 
@@ -14,7 +14,7 @@ def _flatten_keywords():
     """
     Turn the keywords.py dataset into a flat list of phrases.
     """
-    from keywords import PHISHING_KEYWORDS_DATASET  
+    from .keywords import PHISHING_KEYWORDS_DATASET  
     flat = []
     for _, phrases in PHISHING_KEYWORDS_DATASET.items():
         flat.extend(phrases)
@@ -109,7 +109,7 @@ def keyword_position_score(
     }
     return score, details
 
-
+'''
 # --- Tiny self-test / example usage
 if __name__ == "__main__":
     subj = "URGENT: Verify Account Now"
@@ -120,3 +120,4 @@ if __name__ == "__main__":
     score, info = keyword_position_score(subj, body)
     print("Score:", score)
     print("Details:", info)
+'''

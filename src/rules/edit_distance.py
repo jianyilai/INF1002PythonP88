@@ -30,6 +30,7 @@ def levenshtein_distance(s1, s2):
     # The bottom-right cell contains the Levenshtein distance
     return dp[rows-1][cols-1]
 
+'''
 safe_list = []
 
 file_path = r"INF1002PythonP88\dictionary\safedomain.txt"
@@ -44,3 +45,4 @@ for safe in safe_list: #compare the suspicious domain with each safe domain
     if distance < 1: # if there are no differences
         print(f"{domain} is a safe domain.") 
         break
+'''
