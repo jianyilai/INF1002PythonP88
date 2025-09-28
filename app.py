@@ -5,6 +5,7 @@
 # - See total score, classification, and breakdown
 
 from flask import Flask, request, redirect, url_for, render_template_string, jsonify
+import re
 from src.scoring.final_risk_score import compute_email_risk
 from dataclasses import asdict
 from types import SimpleNamespace
@@ -45,6 +46,9 @@ PAGE = """
 <div class="container">
   <div class="card">
     <h1>Phishing Risk Checker</h1>
+    {% if error %}
+      <div style="color: red; margin-bottom: 10px;">{{ error }}</div>
+    {% endif %}
     <form method="post" action="{{ url_for('analyze') }}">
       <label>Sender (From)</label>
       <input type="text" name="sender" placeholder="Security Team &lt;support@paypaI.com&gt;" required>
@@ -61,6 +65,12 @@ PAGE = """
       </div>
     </form>
   </div>
+
+
+# Email validation function (Python, not inside PAGE string)
+def is_valid_email(email):
+  pattern = r'^(?!.*\..)(?!\.)(?!.*\.$)[a-zA-Z0-9._%+-]+@(?!(?:.*\..)|\.)([a-zA-Z-]+\.)+[a-zA-Z]{2,}$'
+  return re.match(pattern, email) is not None
 
   {% if result %}
   <div class="card">
@@ -82,12 +92,19 @@ PAGE = """
           {% if result.breakdown.sender_checks.flags %}
             <div class="muted">Flags:</div>
             <div>
-              {% for f in result.breakdown.sender_checks.flags %}
-                {% if f is string %}
-                  <span class="pill">{{ f }}</span>
-                {% else %}
-                  <div class="kvd">{{ f | tojson(indent=2) }}</div>
-                {% endif %}
+
+              from flask import Flask, request, redirect, url_for, render_template_string, jsonify
+              from src.scoring.final_risk_score import compute_email_risk
+              from dataclasses import asdict
+              from types import SimpleNamespace
+              import re
+              app = Flask(__name__)
+
+              # Email validation function (global scope)
+              def is_valid_email(email):
+                  pattern = r'^(?!.*\..)(?!\.)(?!.*\.$)[a-zA-Z0-9._%+-]+@(?!(?:.*\..)|\.)([a-zA-Z-]+\.)+[a-zA-Z]{2,}$'
+                  return re.match(pattern, email) is not None
+
               {% endfor %}
             </div>
           {% endif %}
@@ -158,16 +175,18 @@ def index():
 
 @app.post("/analyze")
 def analyze():
-    sender  = request.form.get("sender", "")
-    subject = request.form.get("subject", "")
-    body    = request.form.get("body", "")
+  sender  = request.form.get("sender", "")
+  subject = request.form.get("subject", "")
+  body    = request.form.get("body", "")
 
-    result_obj = compute_email_risk(sender, subject, body)  # dataclass
-    data = asdict(result_obj)                                # plain dict
+  if not is_valid_email(sender):
+    error = "Please enter a valid sender email address."
+    return render_template_string(PAGE, result=None, error=error)
 
-    # Pass dicts only. Jinja supports dot-access for dicts.
-    # If your template has a "Raw JSON" section using |tojson, keep a second name if you want:
-    return render_template_string(PAGE, result=data, raw=data)
+  result_obj = compute_email_risk(sender, subject, body)  # dataclass
+  data = asdict(result_obj)                                # plain dict
+
+  return render_template_string(PAGE, result=data, raw=data)
 
 @app.post("/api/analyze")
 def api_analyze():
