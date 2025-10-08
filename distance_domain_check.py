@@ -22,7 +22,7 @@ known_domains = set([
         "web.de", "wanadoo.fr", "orange.fr", "libero.it", "virgilio.it",
         "naver.com", "daum.net", "hanmail.net", "rediffmail.com",
         # Other common domains
-        "me.com", "live.com", "msn.com", "ymail.com", "rocketmail.com",
+        "me.com", "live.com", "msn.com", "rocketmail.com",
         "fastmail.com", "tutanota.com", "inbox.com", "mail.ru", "bk.ru",
         "list.ru", "rambler.ru", "outlook.co.uk", "outlook.fr", "outlook.de",
         "hotmail.co.uk", "hotmail.fr", "hotmail.de",
@@ -80,14 +80,15 @@ def check_domain_reputation_virustotal(domain, api_key):
         return False, f"Error querying VirusTotal API: {e}"
 # Unified email checker with weighted scoring system
 def check_email(input_email):
-    print(f"\nChecking: {input_email}")
+    output = []
+    output.append(f"\nChecking: {input_email}")
 
     # If email is in known_emails, skip all checks and auto flag as safe
     if input_email in known_emails:
-        print("✔️ Email is whitelisted. All checks skipped.")
-        print("\nFinal confidence score: 1.00 / 1.00")
-        print("✔️ Email is very likely legitimate.")
-        return
+        output.append("✔️ Email is whitelisted. All checks skipped.")
+        output.append("\nFinal confidence score: 1.00 / 1.00")
+        output.append("✔️ Email is very likely legitimate.")
+        return '\n'.join(output)
 
     score = 0.0
 
@@ -111,11 +112,11 @@ def check_email(input_email):
         score += WEIGHT_FORMAT
         format_valid = True
     else:
-        print("❌    Invalid email format.")
+        output.append("❌    Invalid email format.")
         format_valid = False
 
     if not domain:
-        print("❌ Unable to extract domain from email.")
+        output.append("❌ Unable to extract domain from email.")
         reputation_ok = False
         rep_message = "No domain extracted, skipping domain reputation."
         domain_typo = False
@@ -123,11 +124,11 @@ def check_email(input_email):
         # 2.5) Detect '+' aliasing in local part
         if '+' in local_part:
             score += WEIGHT_ALIAS_SUSPICION
-            print("⚠️ '+' alias detected in email. This can be used for phishing or evasion.")
+            output.append("⚠️ '+' alias detected in email. This can be used for phishing or evasion.")
 
         # Check if domain is in known_domains
         if domain not in known_domains:
-            print("Unknown domain, review recommended.")
+            output.append("Unknown domain, review recommended.")
             # Do not add WEIGHT_DOMAIN_TYPO for unknown domain
         else:
             score += WEIGHT_DOMAIN_TYPO
@@ -136,35 +137,37 @@ def check_email(input_email):
         reputation_ok, rep_message = check_domain_reputation_virustotal(domain, VT_API_KEY)
         if reputation_ok:
             score += WEIGHT_DOMAIN_REPUTATION
-            print(f"✅ {rep_message}")
+            output.append(f"✅ {rep_message}")
         else:
-            print(f"❌ {rep_message}")
+            output.append(f"❌ {rep_message}")
 
         # 4) Check domain typos
         domain_typo, correct_domain, domain_distance = is_similar_domain(domain, known_domains)
         if domain_typo and domain_distance > 0:
-            print(f"⚠️ Domain suspicious — possible typo (edit distance: {domain_distance}). Did you mean: {correct_domain}?")
+            output.append(f"⚠️ Domain suspicious — possible typo (edit distance: {domain_distance}). Did you mean: {correct_domain}?")
 
     # 5) Check for full email typos (only if format is valid)
     if format_valid:
         similar, match, distance = is_similar_email(input_email, known_emails)
         if not similar:
             score += WEIGHT_FULL_EMAIL_TYPO
-            print("✅ Email format is valid and doesn't match known typo patterns.")
+            output.append("✅ Email format is valid and doesn't match known typo patterns.")
         else:
-            print(f"⚠️ Suspicious — possible typo (edit distance: {distance}). Did you mean: {match}?")
+            output.append(f"⚠️ Suspicious — possible typo (edit distance: {distance}). Did you mean: {match}?")
     else:
-        print("⚠️ Skipping full email typo check due to invalid email format.")
+        output.append("⚠️ Skipping full email typo check due to invalid email format.")
 
     # 6) Final decision
-    print(f"\nFinal confidence score: {score:.2f} / 1.00")
+    output.append(f"\nFinal confidence score: {score:.2f} / 1.00")
 
     if score >= 0.9:
-        print("✔️ Email is very likely legitimate.")
+        output.append("✔️ Email address is very likely legitimate.")
     elif 0.6 <= score < 0.9:
-        print("⚠️ Email is somewhat suspicious, review recommended.")
+        output.append("⚠️ Email address is somewhat suspicious, review recommended.")
     else:
-        print("❌ Email is likely suspicious or malicious.")
+        output.append("❌ Email address is likely suspicious or malicious.")
+
+    return '\n'.join(output)
 
 # Optional: Cache domain reputation results to avoid redundant API calls for performance issues
 #domain_cache = {}

@@ -1,6 +1,6 @@
-def is_valid_email(email):
-    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
-    return re.match(pattern, email) is not None
+import src.rules.distance_domain_check as distance_domain_check
+import io
+import sys
 # app.py
 # ---------------------------------------------------
 # Minimal Flask UI to test your phishing detector.
@@ -79,7 +79,7 @@ th, td { text-align:left; padding: 8px; border-bottom:1px solid #eee; vertical-a
 <tr>
 <td><strong>Sender Checks</strong></td>
 <td>
-<div><strong>Score:</strong> {{ result.breakdown.sender_checks.score }}</div>
+
 <div><strong>Sender Domain:</strong> <span class="mono">{{ result.breakdown.sender_checks.sender_domain or '—' }}</span></div>
 {% if result.breakdown.sender_checks.flags %}
 <div class="muted">Flags:</div>
@@ -87,6 +87,23 @@ th, td { text-align:left; padding: 8px; border-bottom:1px solid #eee; vertical-a
 {% for f in result.breakdown.sender_checks.flags %}
 <span class="pill">{{ f }}</span>
 {% endfor %}
+    # 2. Run all distance_domain_check logic and capture output
+    buf = io.StringIO()
+    sys_stdout = sys.stdout
+    sys.stdout = buf
+    try:
+        distance_domain_check.check_email(sender)
+    finally:
+        sys.stdout = sys_stdout
+    check_output = buf.getvalue()
+
+</div>
+{% endif %}
+
+{% if check_output %}
+<div class="card">
+    <h2>Email Rule Details</h2>
+    <pre class="kvd">{{ check_output }}</pre>
 </div>
 {% endif %}
 </td>
@@ -160,18 +177,23 @@ def index():
 
 @app.post("/analyze")
 def analyze():
-  sender  = request.form.get("sender", "")
-  subject = request.form.get("subject", "")
-  body    = request.form.get("body", "")
 
-  if not is_valid_email(sender):
-    error = "Please enter a valid sender email address."
-    return render_template_string(PAGE, result=None, error=error)
+    sender  = request.form.get("sender", "")
+    subject = request.form.get("subject", "")
+    body    = request.form.get("body", "")
 
-  result_obj = compute_email_risk(sender, subject, body)  # dataclass
-  data = asdict(result_obj)                                # plain dict
+    # Only show the output from check_email (output.append)
+    format_valid = distance_domain_check.is_valid_email(sender)
+    if not format_valid:
+        error = "Please enter a valid sender email address."
+        return render_template_string(PAGE, result=None, error=error, check_output=None)
 
-  return render_template_string(PAGE, result=data, raw=data)
+    check_output = distance_domain_check.check_email(sender)
+
+    result_obj = compute_email_risk(sender, subject, body)  # dataclass
+    data = asdict(result_obj)                                # plain dict
+
+    return render_template_string(PAGE, result=data, raw=data, check_output=check_output)
 
 @app.post("/api/analyze")
 def api_analyze():
@@ -181,7 +203,8 @@ def api_analyze():
         payload.get("subject", ""),
         payload.get("body", ""),
     )
-    return jsonify(asdict(result_obj)), 200
+    # API does not use check_output, but for consistency, return as part of JSON if needed
+    return jsonify({"result": asdict(result_obj), "check_output": None}), 200
 
 if __name__ == "__main__":
     # Run: python app.py
