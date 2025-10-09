@@ -1,5 +1,3 @@
-# Phishing Email Detection Keywords Dataset
-# For cybersecurity research and email filtering systems
 
 PHISHING_KEYWORDS_DATASET = {
     # Urgency and pressure tactics
@@ -7,7 +5,8 @@ PHISHING_KEYWORDS_DATASET = {
         "urgent", "immediate", "expires today", "expires soon", "limited time",
         "act now", "don't delay", "hurry", "last chance", "final notice",
         "time sensitive", "expires in", "deadline", "asap", "quickly",
-        "immediate action required", "respond immediately", "time is running out"
+        "immediate action required", "respond immediately", "time is running out", 
+        "immediately", "expired"
     ],
 
     # Financial and account security threats
@@ -17,7 +16,8 @@ PHISHING_KEYWORDS_DATASET = {
         "verify account", "confirm identity", "update payment",
         "payment failed", "card declined", "billing problem",
         "account will be closed", "suspended account", "frozen account",
-        "security breach", "unauthorized login", "suspicious login"
+        "security breach", "unauthorized login", "suspicious login", 
+        "unusual activity"
     ],
 
     # Money and financial incentives
@@ -26,7 +26,8 @@ PHISHING_KEYWORDS_DATASET = {
         "lottery winner", "inheritance", "tax refund", "compensation",
         "claim your", "collect your", "million dollars", "prize money",
         "windfall", "beneficiary", "transfer funds", "wire transfer",
-        "deposit", "refund available", "bonus", "reward"
+        "deposit", "refund available", "bonus", "reward", "payment required", 
+        "past due", 
     ],
 
     # Credential harvesting phrases
@@ -35,7 +36,8 @@ PHISHING_KEYWORDS_DATASET = {
         "verify identity", "confirm account details", "login verification",
         "password expires", "update security", "verify information",
         "confirm personal information", "account verification required",
-        "click here to verify", "sign in to confirm", "validate account"
+        "click here to verify", "sign in to confirm", "validate account", 
+        "reset password", 
     ],
 
     # Generic suspicious phrases
