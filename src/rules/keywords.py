@@ -88,7 +88,8 @@ PHISHING_KEYWORDS_DATASET = {
         "emergency funds", "stuck abroad", "customs fee",
         "hospital bills", "travel money", "sex", "horny",
         "penis", "pussy", "vagina", "prostitute", "handjob", 
-        "blowjob", "disease free", "drug", "drugs"
+        "blowjob", "disease free", "drug", "drugs", "enlargement", 
+        "viagra", "performance"
     ],
 
     # Business email compromise indicators
