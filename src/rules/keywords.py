@@ -78,7 +78,7 @@ PHISHING_KEYWORDS_DATASET = {
         "install software", "download now", "system update required",
         "security patch", "antivirus", "system scan", "computer infected",
         "virus detected", "malware found", "system compromised",
-        "clean your computer", "speed up pc", "fix errors"
+        "clean your computer", "speed up pc", "fix errors", 
     ],
 
     # Romance/dating scam indicators
@@ -86,7 +86,9 @@ PHISHING_KEYWORDS_DATASET = {
         "lonely", "widowed", "military deployed", "traveling abroad",
         "true love", "soulmate", "destiny", "meant to be",
         "emergency funds", "stuck abroad", "customs fee",
-        "hospital bills", "travel money"
+        "hospital bills", "travel money", "sex", "horny",
+        "penis", "pussy", "vagina", "prostitute", "handjob", 
+        "blowjob", "disease free", "drug", "drugs"
     ],
 
     # Business email compromise indicators
