@@ -7,11 +7,12 @@
 #
 # Returns (score, details)
 
+
 import re
 from urllib.parse import urlparse
 from .keywords import SUSPICIOUS_DOMAINS
-from .edit_distance import levenshtein_distance
 from .whitelist import load_whitelist
+from .distance_domain_check import Levenshtein
 
 whitelist = load_whitelist()
 
@@ -49,7 +50,7 @@ def domain_suspicion_score(domain: str, threshold: int = 2):
 
     # Edit distance check against whitelist
     for safe in whitelist:
-        distance = levenshtein_distance(domain, safe)
+        distance = Levenshtein.distance(domain, safe)
         if 0 < distance <= threshold:
             score += 3
             reasons.append(f"Similar to safe domain: {safe} (distance {distance})")

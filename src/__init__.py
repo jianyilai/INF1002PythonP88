@@ -8,7 +8,6 @@ from .rules import (
     url_check,
     keyword_position_score,
     load_whitelist,
-    levenshtein_distance,
     PHISHING_KEYWORDS_DATASET,
     SUSPICIOUS_DOMAINS,
 )
@@ -21,7 +20,6 @@ __all__ = [
     "url_check",
     "keyword_position_score",
     "load_whitelist",
-    "levenshtein_distance",
     "PHISHING_KEYWORDS_DATASET",
     "SUSPICIOUS_DOMAINS",
 ]
