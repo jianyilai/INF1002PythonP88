@@ -8,6 +8,14 @@ This system allows the user to input 3 thing from an email, SENDER, SUBJECT and 
 - Suspicious URL Detection
 - Final Risk Scoring
 ## Getting started
+Paste the command below in the main project root folder to activate virtual environment.
+```
+.venv\Scripts\activate
+```
+Run the following command to install all the necessary dependencies.
+```
+pip install -r requirements.txt
+```
 Paste the command below in the main project root folder to start the flask application.
 ```
 python app.py
