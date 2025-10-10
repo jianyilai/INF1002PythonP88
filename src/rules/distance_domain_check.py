@@ -7,6 +7,7 @@ known_emails = set(["johndoe@gmail.com", "user@domain.com", "admin@company.com"]
 
 # Your whitelist of trusted domains — used to detect domain typos and validate domain trustworthiness
 known_domains = set([
+    "paypal.com",
         # Public email providers
         "gmail.com", "outlook.com", "yahoo.com", "hotmail.com", "icloud.com",
         "aol.com", "protonmail.com", "zoho.com", "gmx.com",
@@ -37,6 +38,27 @@ known_domains = set([
         "carousell.com", "lazada.sg", "qoo10.sg", "shopee.sg", "zalora.sg",
         "grab.com", "gojek.com", "foodpanda.sg", "deliveroo.com.sg"
     ])
+
+# Homoglyph mapping for common phishing tricks (extend as needed)
+HOMOGLYPHS = {
+    'I': 'l',  # Uppercase i for lowercase L
+    'i': 'l',  # Lowercase i for lowercase L
+    'l': 'I',  # Lowercase L for uppercase i
+}
+
+# Detect if a domain uses suspicious homoglyphs compared to known domains
+def is_homoglyph_domain(input_domain, known_domains):
+    # For each known domain, check if changing any single homoglyph in input_domain matches the legit domain
+    for legit_domain in known_domains:
+        if len(input_domain) != len(legit_domain):
+            continue
+        for i, (c1, c2) in enumerate(zip(input_domain, legit_domain)):
+            if c1 != c2 and c1 in HOMOGLYPHS and HOMOGLYPHS[c1] == c2:
+                # Try replacing just this character and see if it matches
+                candidate = input_domain[:i] + HOMOGLYPHS[c1] + input_domain[i+1:]
+                if candidate == legit_domain:
+                    return True, legit_domain
+    return False, None
 
 # Your VirusTotal API key (replace with your actual key) — for querying domain reputation
 VT_API_KEY = "a7a108d529dd49e079c6bc09d4695a06075d68d427c679b2c925d4548b499984"
@@ -80,6 +102,7 @@ def check_domain_reputation_virustotal(domain, api_key):
         return False, f"Error querying VirusTotal API: {e}"
 # Unified email checker with weighted scoring system
 def check_email(input_email):
+    WEIGHT_HOMOGLYPH = 0.2  # Homoglyph suspicion is significant
     output = []
     output.append(f"\nChecking: {input_email}")
 
@@ -102,7 +125,6 @@ def check_email(input_email):
     # Extract local part and domain once here
     try:
         local_part, domain = input_email.split('@')
-        domain = domain.lower()
     except ValueError:
         local_part = None
         domain = None
@@ -121,6 +143,14 @@ def check_email(input_email):
         rep_message = "No domain extracted, skipping domain reputation."
         domain_typo = False
     else:
+        # Homoglyph detection (before lowercasing)
+        homoglyph_found, legit_domain = is_homoglyph_domain(domain, known_domains)
+        if homoglyph_found:
+            # If homoglyph detected, force score to at least 0.8 (suspicious)
+            score = max(score, 0.8)
+            output.append(f"❌ Domain uses suspicious homoglyphs (e.g., 'I' or 'i' instead of 'l'). Did you mean: {legit_domain}?")
+        # Lowercase for all other checks
+        domain = domain.lower()
         # 2.5) Detect '+' aliasing in local part
         if '+' in local_part:
             score += WEIGHT_ALIAS_SUSPICION
@@ -162,9 +192,9 @@ def check_email(input_email):
     # 6) Final decision (inverted)
     output.append(f"\nFinal phishing score: {score:.2f} / 1.00")
 
-    if score >= 0.9:
+    if score >= 0.8:
         output.append("❌ Email address is very likely phishing or malicious.")
-    elif 0.6 <= score < 0.9:
+    elif 0.5 <= score < 0.8:
         output.append("⚠️ Email address is somewhat suspicious, review recommended.")
     else:
         output.append("✔️ Email address is likely legitimate.")
