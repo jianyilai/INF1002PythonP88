@@ -8,7 +8,7 @@ This system allows the user to input 3 thing from an email, SENDER, SUBJECT and 
 - Suspicious URL Detection
 - Final Risk Scoring
 ## Getting started
-Paste the command below in the main project root folder to activate virtual environment.
+Download and unzip the project folder. Then, paste the command below in the main project root folder to activate virtual environment.
 ```
 .venv\Scripts\activate
 ```
