@@ -86,18 +86,18 @@ def check_email(input_email):
     # If email is in known_emails, skip all checks and auto flag as safe
     if input_email in known_emails:
         output.append("✔️ Email is whitelisted. All checks skipped.")
-        output.append("\nFinal confidence score: 1.00 / 1.00")
+        output.append("\nFinal phishing score: 0.00 / 1.00")
         output.append("✔️ Email is very likely legitimate.")
         return '\n'.join(output)
 
     score = 0.0
 
-    # Define weight constants
-    WEIGHT_FORMAT = 0.4
-    WEIGHT_DOMAIN_REPUTATION = 0.25
-    WEIGHT_FULL_EMAIL_TYPO = 0.2
-    WEIGHT_DOMAIN_TYPO = 0.15
-    WEIGHT_ALIAS_SUSPICION = -0.1  # New: penalize '+' alias usage
+    # Inverted weight constants (higher score = more suspicious)
+    WEIGHT_FORMAT = 0.4                # Invalid format is suspicious
+    WEIGHT_DOMAIN_REPUTATION = 0.25    # Bad reputation is suspicious
+    WEIGHT_FULL_EMAIL_TYPO = 0.2       # Typo is suspicious
+    WEIGHT_DOMAIN_TYPO = 0.15          # Domain typo or unknown is suspicious
+    WEIGHT_ALIAS_SUSPICION = 0.1       # '+' alias is suspicious
 
     # Extract local part and domain once here
     try:
@@ -108,12 +108,12 @@ def check_email(input_email):
         domain = None
 
     # 1) Validate email format
-    if is_valid_email(input_email):
+    if not is_valid_email(input_email):
         score += WEIGHT_FORMAT
-        format_valid = True
-    else:
         output.append("❌    Invalid email format.")
         format_valid = False
+    else:
+        format_valid = True
 
     if not domain:
         output.append("❌ Unable to extract domain from email.")
@@ -126,46 +126,48 @@ def check_email(input_email):
             score += WEIGHT_ALIAS_SUSPICION
             output.append("⚠️ '+' alias detected in email. This can be used for phishing or evasion.")
 
-        # Check if domain is in known_domains
+        # Check if domain is NOT in known_domains (unknown domain is suspicious)
         if domain not in known_domains:
-            output.append("Unknown domain, review recommended.")
-            # Do not add WEIGHT_DOMAIN_TYPO for unknown domain
-        else:
             score += WEIGHT_DOMAIN_TYPO
+            output.append("⚠️ Unknown domain, review recommended.")
 
         # 3) Check domain reputation
         reputation_ok, rep_message = check_domain_reputation_virustotal(domain, VT_API_KEY)
-        if reputation_ok:
+        if not reputation_ok:
             score += WEIGHT_DOMAIN_REPUTATION
-            output.append(f"✅ {rep_message}")
-        else:
             output.append(f"❌ {rep_message}")
+        else:
+            output.append(f"✅ {rep_message}")
 
         # 4) Check domain typos
         domain_typo, correct_domain, domain_distance = is_similar_domain(domain, known_domains)
         if domain_typo and domain_distance > 0:
+            score += WEIGHT_DOMAIN_TYPO
             output.append(f"⚠️ Domain suspicious — possible typo (edit distance: {domain_distance}). Did you mean: {correct_domain}?")
 
     # 5) Check for full email typos (only if format is valid)
     if format_valid:
         similar, match, distance = is_similar_email(input_email, known_emails)
-        if not similar:
+        if similar:
             score += WEIGHT_FULL_EMAIL_TYPO
-            output.append("✅ Email format is valid and doesn't match known typo patterns.")
-        else:
             output.append(f"⚠️ Suspicious — possible typo (edit distance: {distance}). Did you mean: {match}?")
+        else:
+            output.append("✅ Email format is valid and doesn't match known typo patterns.")
     else:
         output.append("⚠️ Skipping full email typo check due to invalid email format.")
 
-    # 6) Final decision
-    output.append(f"\nFinal confidence score: {score:.2f} / 1.00")
+    # Clamp score to [0, 1]
+    score = min(max(score, 0.0), 1.0)
+
+    # 6) Final decision (inverted)
+    output.append(f"\nFinal phishing score: {score:.2f} / 1.00")
 
     if score >= 0.9:
-        output.append("✔️ Email address is very likely legitimate.")
+        output.append("❌ Email address is very likely phishing or malicious.")
     elif 0.6 <= score < 0.9:
         output.append("⚠️ Email address is somewhat suspicious, review recommended.")
     else:
-        output.append("❌ Email address is likely suspicious or malicious.")
+        output.append("✔️ Email address is likely legitimate.")
 
     return '\n'.join(output)
 
