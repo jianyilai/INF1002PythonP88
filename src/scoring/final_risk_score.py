@@ -13,7 +13,7 @@ from typing import Dict, Any, Tuple
 import re
 
 from src.rules.whitelist import load_whitelist
-from src.rules.edit_distance import levenshtein_distance
+from src.rules.distance_domain_check import Levenshtein
 from src.rules.keyword_position_score import keyword_position_score
 from src.rules.keywords import analyze_phishing_indicators  # optional bonus signal
 from src.rules.url_check import url_check
@@ -89,7 +89,7 @@ def _sender_domain_score(domain: str | None, whitelist: list[str], cfg: dict) ->
     thr = cfg["edit_distance_threshold"]
     near_hits = []
     for safe in whitelist:
-        d = levenshtein_distance(domain, safe)
+        d = Levenshtein.distance(domain, safe)
         if 0 < d <= thr:
             score += cfg["edit_distance_near_match"]
             near_hits.append((safe, d))
