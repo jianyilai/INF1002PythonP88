@@ -3,11 +3,11 @@ from rapidfuzz.distance import Levenshtein
 import requests         
 
 # known valid emails (whitelist) — to detect typo variants of legitimate emails
-known_emails = set(["johndoe@gmail.com", "user@domain.com", "admin@company.com"])
+known_emails = set(["johndoe@gmail.com", "user@domain.com", "admin@company.com", 
+                    "billing@paypal.com", "support@microsoft.com", "service@gmail.com"])
 
 # whitelist of trusted domains — to validate domain trustworthiness
 known_domains = set([
-    "paypal.com",
         # Public email providers
         "gmail.com", "outlook.com", "yahoo.com", "hotmail.com", "icloud.com",
         "aol.com", "protonmail.com", "zoho.com", "gmx.com",
@@ -26,7 +26,7 @@ known_domains = set([
         "me.com", "live.com", "msn.com", "rocketmail.com",
         "fastmail.com", "tutanota.com", "inbox.com", "mail.ru", "bk.ru",
         "list.ru", "rambler.ru", "outlook.co.uk", "outlook.fr", "outlook.de",
-        "hotmail.co.uk", "hotmail.fr", "hotmail.de",
+        "hotmail.co.uk", "hotmail.fr", "hotmail.de", "paypal.com"
         # Singapore related domains
         "singnet.com.sg", "pacific.net.sg", "starhub.com.sg", "singtel.com",
         "gov.sg", "moe.edu.sg", "nus.edu.sg", "ntu.edu.sg", "smu.edu.sg",
@@ -75,15 +75,15 @@ def is_similar_email(input_email, known_emails, max_distance=2):
             return True, correct_email, distance
     return False, None, None
 # Detect close typos against known domains using Levenshtein distance
-def is_similar_domain(input_domain, known_domains, max_distance=1):
+def is_similar_domain(input_domain, known_domains, max_distance=2):
     for domain in known_domains:
         distance = Levenshtein.distance(input_domain, domain)
         if distance <= max_distance:
             return True, domain, distance
     return False, None, None
+
 # Check domain reputation via VirusTotal API
 domain_cache = {}
-
 def check_domain_reputation_virustotal(domain, api_key):
     cache_status = None
     if domain in domain_cache:
@@ -113,7 +113,6 @@ def check_domain_reputation_virustotal(domain, api_key):
     return result + (cache_status,)
 # Unified email checker with weighted scoring system
 def check_email(input_email):
-    WEIGHT_HOMOGLYPH = 0.2  # Homoglyph suspicion is significant
     output = []
     output.append(f"\nChecking: {input_email}")
 
@@ -121,7 +120,7 @@ def check_email(input_email):
     if input_email in known_emails:
         output.append("✔️ Email is whitelisted. All checks skipped.")
         output.append("\nFinal phishing score: 0.00 / 1.00")
-        output.append("✔️ Email is very likely legitimate.")
+        output.append("✔️ Email is very likely legitimate.") 
         return '\n'.join(output)
 
     score = 0.0
@@ -170,7 +169,7 @@ def check_email(input_email):
         # Check if domain is NOT in known_domains (unknown domain is suspicious)
         if domain not in known_domains:
             score += WEIGHT_DOMAIN_TYPO
-            output.append("⚠️ Unknown domain, not listed under one of our known domains.")
+            output.append("⚠️ Unknown domain, not listed under our domain whitelists.")
 
         # 3) Check domain reputation
         reputation_ok, rep_message, cache_status = check_domain_reputation_virustotal(domain, VT_API_KEY)
