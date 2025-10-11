@@ -164,28 +164,9 @@
                 <tr>
                     <td><strong>Sender Checks</strong></td>
                     <td>
-
-                        <div><strong>Sender Domain:</strong> <span class="mono">{{
-                                result.breakdown.sender_checks.sender_domain or '—' }}</span></div>
-                        {% if result.breakdown.sender_checks.flags %}
-                        <div class="muted">Flags:</div>
-                        <div>
-                            {% for f in result.breakdown.sender_checks.flags %}
-                            <span class="pill">{{ f }}</span>
-                            {% endfor %}
-                            # 2. Run all distance_domain_check logic and capture output
-                            buf = io.StringIO()
-                            sys_stdout = sys.stdout
-                            sys.stdout = buf
-                            try:
-                            distance_domain_check.check_email(sender)
-                            finally:
-                            sys.stdout = sys_stdout
-                            check_output = buf.getvalue()
-
-                        </div>
-                        {% endif %}
-
+                        <div><strong>Sender Domain:</strong> <span class="mono">{{ result.breakdown.sender_checks.sender_domain or '—' }}</span></div>
+                        <div><strong>Score:</strong> {{ result.breakdown.sender_checks.score }}</div>
+                        {# Flags output removed as requested #}
                         {% if check_output %}
                         <div class="card">
                             <h2>Email Rule Details</h2>

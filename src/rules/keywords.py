@@ -6,7 +6,7 @@ PHISHING_KEYWORDS_DATASET = {
         "act now", "don't delay", "hurry", "last chance", "final notice",
         "time sensitive", "expires in", "deadline", "asap", "quickly",
         "immediate action required", "respond immediately", "time is running out", 
-        "immediately", "expired"
+        "immediately", "expired", "attention"
     ],
 
     # Financial and account security threats
@@ -27,7 +27,7 @@ PHISHING_KEYWORDS_DATASET = {
         "claim your", "collect your", "million dollars", "prize money",
         "windfall", "beneficiary", "transfer funds", "wire transfer",
         "deposit", "refund available", "bonus", "reward", "payment required", 
-        "past due", 
+        "past due", "money", "uncleared", "charge", "business partner"
     ],
 
     # Credential harvesting phrases
@@ -131,8 +131,6 @@ EMAIL_HEADER_FLAGS = {
 }
 
 # Function to check email content against phishing indicators
-
-
 def analyze_phishing_indicators(email_text, email_subject="", sender_email=""):
     """
     Analyze email content for phishing indicators
@@ -192,12 +190,8 @@ def analyze_phishing_indicators(email_text, email_subject="", sender_email=""):
     return results
 
 # Example usage function
-
-
 def example_usage():
-    """
-    Example of how to use the phishing detection system
-    """
+    # Example of how to use the phishing detection system  
     sample_email = """
     URGENT: Your account has been suspended due to suspicious activity.
     Click here to verify your account immediately to avoid permanent closure.
