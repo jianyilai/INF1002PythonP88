@@ -20,6 +20,21 @@ def index():
 @app.post("/analyze")
 def analyze():
 
+    action = request.form.get("action", "analyze")
+    
+    # If user clicked "Clear", just render blank form
+    if action == "clear":
+        return render_template(
+            "index.html",
+            sender="",
+            subject="",
+            body="",
+            result=None,
+            raw=None,
+            check_output=None,
+            error=None
+        )
+
     sender  = request.form.get("sender", "")
     subject = request.form.get("subject", "")
     body    = request.form.get("body", "")
