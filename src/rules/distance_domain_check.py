@@ -105,7 +105,7 @@ def check_domain_reputation_virustotal(domain, api_key):
             elif response.status_code == 401:
                 result = (False, "Unauthorized - invalid API key.")
             else:
-                result = (False, f"VirusTotal API error: HTTP {response.status_code}")
+                result = (False, f"VirusTotal API error: HTTP {response.status_code}. The URL you are trying to reach does not exist or is incorrect. ")
         except Exception as e:
             result = (False, f"Error querying VirusTotal API: {e}")
         domain_cache[domain] = result
@@ -179,7 +179,7 @@ def check_email(input_email):
             output.append(f"❌ {rep_message}")
         else:
             output.append(f"✅ {rep_message}")
-        #Output cache_status for debugging or display:
+            #Output cache_status for debugging or display:
             output.append(f"[Cache status: {cache_status}]")
 
         # 4) Check domain typos
