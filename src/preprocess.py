@@ -1,6 +1,9 @@
 import pandas as pd
 import re
 
+# Run this file to clean up the raw dataset
+
+# File path to the raw dataset, change as needed
 file_path = r"data\raw\Nigerian_Fraud.csv"
 # Load the dataset
 df = pd.read_csv(file_path, encoding='utf-8')
@@ -10,7 +13,7 @@ df = df.dropna(subset=['sender', 'subject', 'body'])
 for col in ['sender', 'subject', 'body']:
     df[col] = df[col].astype(str).str.strip()
 
-# check whether the sender column contains valid email addresses
+# Check whether the sender column contains valid email addresses
 def check_sender_email(text): 
     # extract all valid email addresses
     email_pattern = r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}'
