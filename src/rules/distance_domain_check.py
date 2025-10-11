@@ -3,11 +3,11 @@ from rapidfuzz.distance import Levenshtein
 import requests         
 
 # known valid emails (whitelist) — to detect typo variants of legitimate emails
-known_emails = set(["johndoe@gmail.com", "user@domain.com", "admin@company.com"])
+known_emails = set(["johndoe@gmail.com", "user@domain.com", "admin@company.com", 
+                    "billing@paypal.com", "support@microsoft.com", "service@gmail.com"])
 
 # whitelist of trusted domains — to validate domain trustworthiness
 known_domains = set([
-    "paypal.com",
         # Public email providers
         "gmail.com", "outlook.com", "yahoo.com", "hotmail.com", "icloud.com",
         "aol.com", "protonmail.com", "zoho.com", "gmx.com",
@@ -26,7 +26,7 @@ known_domains = set([
         "me.com", "live.com", "msn.com", "rocketmail.com",
         "fastmail.com", "tutanota.com", "inbox.com", "mail.ru", "bk.ru",
         "list.ru", "rambler.ru", "outlook.co.uk", "outlook.fr", "outlook.de",
-        "hotmail.co.uk", "hotmail.fr", "hotmail.de",
+        "hotmail.co.uk", "hotmail.fr", "hotmail.de", "paypal.com"
         # Singapore related domains
         "singnet.com.sg", "pacific.net.sg", "starhub.com.sg", "singtel.com",
         "gov.sg", "moe.edu.sg", "nus.edu.sg", "ntu.edu.sg", "smu.edu.sg",
@@ -75,34 +75,44 @@ def is_similar_email(input_email, known_emails, max_distance=2):
             return True, correct_email, distance
     return False, None, None
 # Detect close typos against known domains using Levenshtein distance
-def is_similar_domain(input_domain, known_domains, max_distance=1):
+def is_similar_domain(input_domain, known_domains, max_distance=2):
     for domain in known_domains:
         distance = Levenshtein.distance(input_domain, domain)
         if distance <= max_distance:
             return True, domain, distance
     return False, None, None
+
 # Check domain reputation via VirusTotal API
+domain_cache = {}
 def check_domain_reputation_virustotal(domain, api_key):
-    url = f"https://www.virustotal.com/api/v3/domains/{domain}"
-    headers = {"x-apikey": api_key}
-    try:
-        response = requests.get(url, headers=headers)
-        if response.status_code == 200:
-            data = response.json()
-            malicious_count = data.get('data', {}).get('attributes', {}).get('last_analysis_stats', {}).get('malicious', 0)
-            if malicious_count == 0:
-                return True, "Domain reputation is clean."
+    cache_status = None
+    if domain in domain_cache:
+        cache_status = f"Cache hit for {domain}"
+        result = domain_cache[domain]
+    else:
+        cache_status = f"API call for {domain}"
+        url = f"https://www.virustotal.com/api/v3/domains/{domain}"
+        headers = {"x-apikey": api_key}
+        try:
+            response = requests.get(url, headers=headers)
+            if response.status_code == 200:
+                data = response.json()
+                malicious_count = data.get('data', {}).get('attributes', {}).get('last_analysis_stats', {}).get('malicious', 0)
+                if malicious_count == 0:
+                    result = (True, "Domain reputation is clean.")
+                else:
+                    result = (False, f"Domain flagged with {malicious_count} malicious reports.")
+            elif response.status_code == 401:
+                result = (False, "Unauthorized - invalid API key.")
             else:
-                return False, f"Domain flagged with {malicious_count} malicious reports."
-        elif response.status_code == 401:
-            return False, "Unauthorized - invalid API key."
-        else:
-            return False, f"VirusTotal API error: HTTP {response.status_code}"
-    except Exception as e:
-        return False, f"Error querying VirusTotal API: {e}"
+                result = (False, f"VirusTotal API error: HTTP {response.status_code}. The URL you are trying to reach does not exist or is incorrect. ")
+        except Exception as e:
+            result = (False, f"Error querying VirusTotal API: {e}")
+        domain_cache[domain] = result
+    # Attach cache status to the result as a tuple (result, message, cache_status)
+    return result + (cache_status,)
 # Unified email checker with weighted scoring system
 def check_email(input_email):
-    WEIGHT_HOMOGLYPH = 0.2  # Homoglyph suspicion is significant
     output = []
     output.append(f"\nChecking: {input_email}")
 
@@ -110,7 +120,7 @@ def check_email(input_email):
     if input_email in known_emails:
         output.append("✔️ Email is whitelisted. All checks skipped.")
         output.append("\nFinal phishing score: 0.00 / 1.00")
-        output.append("✔️ Email is very likely legitimate.")
+        output.append("✔️ Email is very likely legitimate.") 
         return '\n'.join(output)
 
     score = 0.0
@@ -159,15 +169,17 @@ def check_email(input_email):
         # Check if domain is NOT in known_domains (unknown domain is suspicious)
         if domain not in known_domains:
             score += WEIGHT_DOMAIN_TYPO
-            output.append("⚠️ Unknown domain, review recommended.")
+            output.append("⚠️ Unknown domain, not listed under our domain whitelists.")
 
         # 3) Check domain reputation
-        reputation_ok, rep_message = check_domain_reputation_virustotal(domain, VT_API_KEY)
+        reputation_ok, rep_message, cache_status = check_domain_reputation_virustotal(domain, VT_API_KEY)
         if not reputation_ok:
             score += WEIGHT_DOMAIN_REPUTATION
             output.append(f"❌ {rep_message}")
         else:
             output.append(f"✅ {rep_message}")
+            #Output cache_status for debugging or display:
+            output.append(f"[Cache status: {cache_status}]")
 
         # 4) Check domain typos
         domain_typo, correct_domain, domain_distance = is_similar_domain(domain, known_domains)
@@ -201,16 +213,6 @@ def check_email(input_email):
 
     return '\n'.join(output)
 
-# Optional: Cache domain reputation results to avoid redundant API calls for performance issues
-#domain_cache = {}
-
-#def check_domain_reputation_virustotal(domain, api_key):
-#    if domain in domain_cache:
-#        return domain_cache[domain]
-    # ... existing API logic ...
-#    domain_cache[domain] = (result, message)
-#   return domain_cache[domain]
-
 # Terminal input entrypoint
 if __name__ == "__main__":
     while True:
@@ -222,4 +224,3 @@ if __name__ == "__main__":
             print("Please enter a valid email address.")
 
 
-    

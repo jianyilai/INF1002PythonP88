@@ -13,7 +13,7 @@ from typing import Dict, Any, Tuple
 import re
 
 from src.rules.whitelist import load_whitelist
-from src.rules.distance_domain_check import Levenshtein
+from src.rules.distance_domain_check import Levenshtein, check_email
 from src.rules.keyword_position_score import keyword_position_score
 from src.rules.keywords import analyze_phishing_indicators  # optional bonus signal
 from src.rules.url_check import url_check
@@ -139,10 +139,41 @@ def compute_email_risk(
 
     breakdown: Dict[str, Any] = {}
 
-    # Sender domain based checks (whitelist + lookalikes)
-    sender_domain = _extract_sender_domain(sender or "")
-    s_score, s_info = _sender_domain_score(sender_domain, whitelist, cfg)
-    breakdown["sender_checks"] = {"score": s_score, **s_info}
+
+    # Use check_email from distance_domain_check.py for sender scoring
+    # Extract sender email (if present in angle brackets)
+    import re
+    email_match = re.search(r"<([^>]+)>", sender or "")
+    sender_email = email_match.group(1) if email_match else (sender or "")
+    check_email_result = check_email(sender_email)
+    # Parse the phishing score from the output (look for 'Final phishing score: X.XX / 1.00')
+    import re
+    phishing_score = 0.0
+    for line in check_email_result.splitlines():
+        m = re.search(r"Final phishing score:\s*([0-9.]+)\s*/\s*1.00", line)
+        if m:
+            phishing_score = float(m.group(1))
+            break
+    # Map phishing_score to sender_checks as per user request
+    if 0.5 < phishing_score < 0.8:
+        sender_checks_score = 1
+        sender_checks_label = "Suspicious (score 1)"
+    elif 0.8 <= phishing_score < 1.0:
+        sender_checks_score = 2
+        sender_checks_label = "Very suspicious (score 2)"
+    elif phishing_score == 1.0:
+        sender_checks_score = 3
+        sender_checks_label = "Phishing (score 3)"
+    else:
+        sender_checks_score = 0
+        sender_checks_label = "Legitimate (score 0)"
+    breakdown["sender_checks"] = {
+        "score": sender_checks_score,
+        "phishing_score": phishing_score,
+        "label": sender_checks_label,
+        "details": check_email_result,
+        "sender_domain": sender_email.split('@')[1] if '@' in sender_email else sender_email
+    }
 
     # Keyword position score (subject & early body)
     kp_kwargs = {
@@ -168,8 +199,8 @@ def compute_email_risk(
         "recommendation": dict_result.get("recommendations", [""])[0],
     }
 
-    # Sum scores
-    total = s_score + kw_score + url_score + dict_score
+    # Sum scores (replace s_score with sender_checks_score)
+    total = sender_checks_score + kw_score + url_score + dict_score
     label = classify(total)
 
     return RiskResult(total_score=total, classification=label, breakdown=breakdown)
