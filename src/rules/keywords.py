@@ -27,7 +27,7 @@ PHISHING_KEYWORDS_DATASET = {
         "claim your", "collect your", "million dollars", "prize money",
         "windfall", "beneficiary", "transfer funds", "wire transfer",
         "deposit", "refund available", "bonus", "reward", "payment required", 
-        "past due", 
+        "past due", "money", "uncleared", "charge", "business partner"
     ],
 
     # Credential harvesting phrases
