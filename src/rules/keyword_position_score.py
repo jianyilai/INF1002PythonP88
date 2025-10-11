@@ -7,13 +7,11 @@
 from typing import Iterable, Tuple, Dict, Any
 #from .keywords import PHISHING_KEYWORDS_DATASET
 import re
- 
+
 # uses keywords.py, 
 
 def _flatten_keywords():
-    """
-    Turn the keywords.py dataset into a flat list of phrases.
-    """
+    # Turn the keywords.py dataset into a flat list of phrases.
     from .keywords import PHISHING_KEYWORDS_DATASET  
     flat = []
     for _, phrases in PHISHING_KEYWORDS_DATASET.items():
@@ -108,16 +106,3 @@ def keyword_position_score(
         },
     }
     return score, details
-
-'''
-# --- Tiny self-test / example usage
-if __name__ == "__main__":
-    subj = "URGENT: Verify Account Now"
-    body = (
-        "Please verify your account immediately to avoid suspension. "
-        "Click here to proceed. This is a routine security check."
-    )
-    score, info = keyword_position_score(subj, body)
-    print("Score:", score)
-    print("Details:", info)
-'''

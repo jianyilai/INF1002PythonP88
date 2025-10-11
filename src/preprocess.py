@@ -10,7 +10,7 @@ df = df.dropna(subset=['sender', 'subject', 'body'])
 for col in ['sender', 'subject', 'body']:
     df[col] = df[col].astype(str).str.strip()
 
-# check wheter the sender column contains valid email addresses
+# check whether the sender column contains valid email addresses
 def check_sender_email(text): 
     # extract all valid email addresses
     email_pattern = r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}'

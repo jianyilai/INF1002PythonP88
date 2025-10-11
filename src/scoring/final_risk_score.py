@@ -30,11 +30,11 @@ DEFAULT_WEIGHTS = {
     # URL check is scored inside url_check; we just sum it
 }
 
-# Classification thresholds (tune to your dataset)
+# Classification thresholds
 THRESHOLDS = {
-    "SAFE_MAX": 0,         # total score <= 0  => SAFE
-    "SUSPICIOUS_MAX": 6,   # 1..6              => SUSPICIOUS
-    # >6                   => PHISHING
+    # total score 0 and below = SAFE, 1-6 = SUSPICIOUS, >6 = PHISHING
+    "SAFE_MAX": 0,         
+    "SUSPICIOUS_MAX": 6
 }
 
 EMAIL_REGEX = re.compile(r"[A-Za-z0-9._%+-]+@([A-Za-z0-9.-]+\.[A-Za-z]{2,})")
@@ -139,12 +139,12 @@ def compute_email_risk(
 
     breakdown: Dict[str, Any] = {}
 
-    # 1) Sender domain based checks (whitelist + lookalikes)
+    # Sender domain based checks (whitelist + lookalikes)
     sender_domain = _extract_sender_domain(sender or "")
     s_score, s_info = _sender_domain_score(sender_domain, whitelist, cfg)
     breakdown["sender_checks"] = {"score": s_score, **s_info}
 
-    # 2) Keyword position score (subject & early body)
+    # Keyword position score (subject & early body)
     kp_kwargs = {
         "subject_weight": keyword_params.get("subject_weight", cfg["min_keyword_subject_weight"]) if keyword_params else cfg["min_keyword_subject_weight"],
         "early_weight": keyword_params.get("early_weight", cfg["min_keyword_early_weight"]) if keyword_params else cfg["min_keyword_early_weight"],
@@ -153,12 +153,12 @@ def compute_email_risk(
     kw_score, kw_details = keyword_position_score(subject, body, **kp_kwargs)
     breakdown["keyword_position"] = {"score": kw_score, **kw_details}
 
-    # 3) Suspicious URL checks (IPs, TLDs, patterns, near lookalikes)
+    # Suspicious URL checks (IPs, TLDs, patterns, near lookalikes)
     url_score, url_details = url_check(body or "")
     breakdown["url_checks"] = {"score": url_score, **url_details}
 
-    # 4) (Optional) Dictionary-based keyword categories (coarse signal)
-    #    This gives a lightweight corroborative score & flags.
+    # Dictionary-based keyword categories
+    # gives a lightweight corroborative score & flags.
     dict_result = analyze_phishing_indicators(body or "", subject or "", sender or "")
     dict_score = dict_result.get("risk_score", 0)
     breakdown["dictionary_indicators"] = {

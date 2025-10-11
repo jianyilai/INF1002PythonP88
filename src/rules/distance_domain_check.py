@@ -1,11 +1,11 @@
-import re                # Import regex module for pattern matching (email validation)
-from rapidfuzz.distance import Levenshtein       # Import Levenshtein library to calculate edit distance for typo detection 
-import requests          # Import requests module to make HTTP calls (VirusTotal API)
+import re                
+from rapidfuzz.distance import Levenshtein      
+import requests         
 
-# Your known valid emails (whitelist) — used to detect typo variants of legitimate emails
+# known valid emails (whitelist) — to detect typo variants of legitimate emails
 known_emails = set(["johndoe@gmail.com", "user@domain.com", "admin@company.com"])
 
-# Your whitelist of trusted domains — used to detect domain typos and validate domain trustworthiness
+# whitelist of trusted domains — to validate domain trustworthiness
 known_domains = set([
     "paypal.com",
         # Public email providers
@@ -39,7 +39,7 @@ known_domains = set([
         "grab.com", "gojek.com", "foodpanda.sg", "deliveroo.com.sg"
     ])
 
-# Homoglyph mapping for common phishing tricks (extend as needed)
+# Homoglyph mapping for common phishing tricks (similar looking characters)
 HOMOGLYPHS = {
     'I': 'l',  # Uppercase i for lowercase L
     'i': 'l',  # Lowercase i for lowercase L
@@ -60,7 +60,7 @@ def is_homoglyph_domain(input_domain, known_domains):
                     return True, legit_domain
     return False, None
 
-# Your VirusTotal API key (replace with your actual key) — for querying domain reputation
+# VirusTotal API key  — for querying domain reputation
 VT_API_KEY = "a7a108d529dd49e079c6bc09d4695a06075d68d427c679b2c925d4548b499984"
 
 # Validate email format with regex

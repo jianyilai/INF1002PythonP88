@@ -54,24 +54,24 @@ def domain_suspicion_score(domain: str, threshold: int = 2, use_reputation: bool
 
     sub, registrable, suffix = _parts(domain)
 
-    # 0) Unknown registrable domain (tiny nudge)
+    # Unknown registrable domain (tiny nudge)
     if registrable and registrable not in WHITELIST_SET:
         score += 1
         reasons.append(f"{domain}: registrable domain '{registrable}' not in whitelist")
 
-    # 1) Suspicious TLDs
+    # Suspicious TLDs
     for tld in SUSPICIOUS_DOMAINS.get("suspicious_tlds", []):
         if registrable.endswith(tld) or domain.endswith(tld):
             score += 2
             reasons.append(f"{domain}: suspicious TLD '{tld}'")
 
-    # 2) Suspicious patterns anywhere in the host
+    # Suspicious patterns anywhere in the host
     for pat in SUSPICIOUS_DOMAINS.get("domain_patterns", []):
         if pat in domain:
             score += 1
             reasons.append(f"{domain}: suspicious pattern '{pat}'")
 
-    # 2b) Risky subdomain tokens (e.g., 'login', 'verify')
+    # Risky subdomain tokens (e.g., 'login', 'verify')
     if sub:
         tokens = {tok for tok in sub.split(".") if tok}
         hits = sorted(tokens & RISKY_SUBDOMAIN_TOKENS)
@@ -81,14 +81,14 @@ def domain_suspicion_score(domain: str, threshold: int = 2, use_reputation: bool
             score += add
             reasons.append(f"{domain}: risky subdomain token(s) {hits}")
 
-    # 3) Near-whitelist similarity (use registrable vs whitelist)
+    # Near-whitelist similarity (use registrable vs whitelist)
     if registrable:
         similar, correct, dist = is_similar_domain(registrable, WHITELIST_SET, max_distance=threshold)
         if similar and dist and dist > 0:
             score += 3
             reasons.append(f"{domain}: '{registrable}' similar to whitelisted '{correct}' (distance {dist})")
 
-    # 4) (Optional) VirusTotal reputation
+    # VirusTotal reputation
     if use_reputation:
         ok, msg = check_domain_reputation_virustotal(registrable or domain)
         if ok:
