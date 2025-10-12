@@ -1,10 +1,12 @@
 import pandas as pd
 import re
+import os
 
 # Run this file to clean up the raw dataset
 
-# File path to the raw dataset, change as needed
+# File path to the dataset, change as needed
 file_path = r"data\raw\Nigerian_Fraud.csv"
+processed_path = r"data\processed\Nigerian_Fraud_cleaned.csv"
 # Load the dataset
 df = pd.read_csv(file_path, encoding='utf-8')
 
@@ -24,7 +26,10 @@ df['sender'] = df['sender'].apply(check_sender_email)
 
 df = df.reset_index(drop=True)
 
+# Remove existing file if exists
+if os.path.exists(processed_path):
+    os.remove(processed_path)
+
 # Save cleaned data to data/processed folder
-processed_path = r"data\processed\Nigerian_Fraud_cleaned.csv"
 df.to_csv(processed_path, index=False)
 print(f"Cleaned data saved to {processed_path}")
