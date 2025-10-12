@@ -1,6 +1,6 @@
 # INF1002 Python P8-8 Phishing Email Detection System
 This system allows the user to input 3 thing from an email, SENDER, SUBJECT and BODY. The program will then analyze the contents and determine whether the email is either SAFE, SUSPICIOUS or PHISHING.
-## Features
+## Key Features
 - Whitelist Check
 - Keyword Detection
 - Keyword Position Scoring
@@ -8,15 +8,23 @@ This system allows the user to input 3 thing from an email, SENDER, SUBJECT and 
 - Suspicious URL Detection
 - Final Risk Scoring
 ## Getting started
-Download and unzip the project folder. Then, paste the command below in the main project root folder to activate virtual environment.
+Download and unzip the project folder or clone it using Git:
+```
+git clone https://github.com/jianyilai/INF1002PythonP88.git
+```
+If the .venv folder does not already exist, create one by running:
+```
+python -m venv .venv
+```
+To activate the virtual environment run:
 ```
 .venv\Scripts\activate
 ```
-Run the following command to install all the necessary dependencies.
+Install all the required packages using:
 ```
 pip install -r requirements.txt
 ```
-Paste the command below in the main project root folder to start the flask application.
+Start the flask appliction by running:
 ```
 python app.py
 ```
